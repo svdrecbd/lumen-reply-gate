@@ -5,46 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lumen Cloud: Reply Check</title>
 <style>
-  :root { --ink:#1d2330; --muted:#5d6675; --line:#d9dee7; --bg:#f6f7f9; --card:#fff;
-          --ok:#147a4a; --ok-bg:#e6f5ed; --hold:#9a5b00; --hold-bg:#fff4e0; --block:#b42318; --block-bg:#fdecea; --accent:#2a5bd7; }
-  * { box-sizing: border-box; }
-  body { font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; color: var(--ink); background: var(--bg); margin: 0; }
-  header { background: var(--ink); color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
-  header h1 { font-size: 18px; margin: 0; }
-  header span { color: #b8c0cc; font-size: 13px; }
-  main { max-width: 1100px; margin: 20px auto; padding: 0 16px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 18px; }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 400; src: url("fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 500; src: url("fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 600; src: url("fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-weight: 400; src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-weight: 500; src: url("fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+  :root { --ink:#161616; --muted:#525252; --line:#c6c6c6; --soft:#e0e0e0; --bg:#f4f4f4; --card:#fff;
+          --ok:#198038; --ok-bg:#defbe6; --hold:#8a5a00; --hold-bg:#fcf4d6; --block:#da1e28; --block-bg:#fff1f1; --accent:#0f62fe;
+          --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace; }
+  * { box-sizing: border-box; border-radius: 0 !important; }
+  body { font: 14px/1.45 "IBM Plex Sans", system-ui, sans-serif; color: var(--ink); background: var(--bg); margin: 0; padding-bottom: 16px; }
+  @media (max-width: 1212px) { main { margin: 16px; } }
+  header { background: var(--ink); color: #fff; padding: 0 24px; height: 48px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  header h1 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: .01em; }
+  header h1::before { content: "■ "; color: var(--accent); }
+  header span { color: #c6c6c6; font-size: 12px; }
+  main { max-width: 1180px; margin: 16px auto; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
   @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
-  h2 { font-size: 15px; margin: 0 0 10px; }
-  label { font-size: 13px; color: var(--muted); display: block; margin: 8px 0 4px; }
-  textarea { width: 100%; min-height: 150px; font: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
-  select, input { font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .card { background: var(--card); padding: 16px 20px; }
+  h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+  .card > h2:first-child { margin-top: 0; }
+  label { font-size: 12px; color: var(--muted); display: block; margin: 10px 0 4px; }
+  textarea { width: 100%; min-height: 140px; font: 14px/1.5 "IBM Plex Sans", sans-serif; padding: 10px 12px; border: 0; border-bottom: 1px solid #8d8d8d; background: var(--bg); resize: vertical; }
+  textarea:focus, select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+  select, input { font: inherit; height: 38px; padding: 0 10px; border: 0; border-bottom: 1px solid #8d8d8d; background: var(--bg); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
   .row > div { flex: 1; min-width: 130px; }
   .row select, .row input { width: 100%; }
-  button { font: inherit; border: 0; border-radius: 8px; padding: 9px 14px; cursor: pointer; background: var(--accent); color: #fff; }
-  button.secondary { background: #eef1f6; color: var(--ink); }
-  button:disabled { opacity: .55; cursor: wait; }
+  button { font: 500 14px "IBM Plex Sans", sans-serif; border: 0; height: 40px; padding: 0 18px; cursor: pointer; background: var(--accent); color: #fff; }
+  button:hover { background: #0353e9; }
+  button.secondary { background: var(--ink); color: #fff; }
+  button.secondary:hover { background: #393939; }
+  button:disabled { opacity: .5; cursor: wait; }
   .hint { font-size: 12px; color: var(--muted); }
+  .counter { font-family: var(--mono); }
   .counter.over { color: var(--block); font-weight: 600; }
-  .banner { border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
-  .banner .big { font-size: 20px; font-weight: 700; }
+  .banner { padding: 12px 16px; margin-bottom: 4px; border-left: 4px solid currentColor; }
+  .banner .big { font-size: 18px; font-weight: 600; }
+  .banner div:last-child { font-family: var(--mono); font-size: 12.5px; }
   .APPROVE { background: var(--ok-bg); color: var(--ok); }
   .HOLD_FOR_REVIEW { background: var(--hold-bg); color: var(--hold); }
   .BLOCK { background: var(--block-bg); color: var(--block); }
-  .ERROR { background: #f1f1f1; color: #444; }
-  ul { margin: 6px 0 0; padding-left: 18px; }
-  li { margin: 3px 0; }
-  .signals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-  .sig { background: var(--bg); border-radius: 8px; padding: 8px; text-align: center; }
-  .sig b { display: block; font-size: 16px; }
-  .sig small { color: var(--muted); }
-  .review { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+  .ERROR { background: var(--soft); color: var(--ink); }
+  p { margin: 4px 0; }
+  ul { margin: 4px 0 0; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .signals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 6px; }
+  .sig { background: var(--card); padding: 8px 10px; }
+  .sig b { display: block; font: 500 16px var(--mono); }
+  .sig small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .review { border-top: 1px solid var(--soft); margin-top: 14px; padding-top: 4px; }
   .audit { font-size: 12.5px; }
-  .audit .rec { border-bottom: 1px solid var(--line); padding: 6px 0; }
-  .pill { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
+  .audit .rec { border-bottom: 1px solid var(--soft); padding: 6px 0; font-family: var(--mono); font-size: 12px; }
+  .audit .rec .muted { font-family: "IBM Plex Sans", sans-serif; font-size: 12.5px; }
+  .pill { font: 500 11px var(--mono); padding: 1px 6px; display: inline-block; min-width: 0; }
   .muted { color: var(--muted); }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #c8d0dc; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50% !important; animation: spin 0.8s linear infinite; vertical-align: -2px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
