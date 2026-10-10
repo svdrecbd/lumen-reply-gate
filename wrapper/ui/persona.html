@@ -231,6 +231,8 @@ $("refreshAudit").onclick = loadAudit;
 
 loadSamples().then(list => {
   samples = list || [];
+  const preset = new URLSearchParams(location.search).get("sample");  // ?sample=cs-07 runs a test case on load
+  if (preset) setTimeout(() => { $("samples").value = preset; $("simulate").click(); }, 0);
   $("samples").innerHTML = `<option value="">Choose a test case…</option>` +
     samples.map(s => `<option value="${esc(s.id)}">${esc(s.id)}: ${esc(s.text.slice(0, 70))}${s.text.length > 70 ? "…" : ""}</option>`).join("");
 }).catch(() => { $("samples").innerHTML = `<option value="">Samples unavailable</option>`; });
