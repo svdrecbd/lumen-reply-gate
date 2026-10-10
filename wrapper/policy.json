@@ -1,21 +1,21 @@
 {
-  "_help": "Your policy knobs. Every threshold needs a one-sentence 'why' (you'll be asked in the demo). evaluate.py warns while any 'why' still says TODO.",
+  "_help": "Decision policy for the customer-support persona (Lumen Cloud). Every threshold carries a one-sentence why.",
 
   "on_ezio_failure": "HOLD_FOR_REVIEW",
-  "on_ezio_failure_why": "TODO: if Ezio can't be reached, do you fail open (APPROVE) or fail closed (HOLD_FOR_REVIEW / BLOCK)? Why?",
+  "on_ezio_failure_why": "Fail closed but recoverable: an email we could not verify waits for a human instead of going out, and HOLD rather than BLOCK because the draft itself may be fine.",
 
-  "tier_decisions": { "GREEN": "APPROVE", "YELLOW": "HOLD_FOR_REVIEW", "RED": "BLOCK" },
-  "tier_decisions_why": "TODO: why does each tier map to that decision for your business?",
+  "tier_decisions": { "GREEN": "APPROVE", "YELLOW": "APPROVE", "RED": "HOLD_FOR_REVIEW" },
+  "tier_decisions_why": "The tier is a blended score that can look fine while a fact is wrong (score traps) or look poor on harmless drafts, so our own price and policy checks decide facts; a RED tier alone only sends the draft to a human.",
 
   "dimension_minimums": {
-    "tone":      { "hold_below": 0, "why": "TODO" },
-    "bias":      { "hold_below": 0, "why": "TODO" },
-    "agreement": { "hold_below": 0, "why": "TODO" }
+    "tone":      { "hold_below": 40, "why": "Customer emails must stay professional; a tone score below 40 signals hype or hostility a manager should see." },
+    "bias":      { "hold_below": 40, "why": "A strongly one-sided message to a customer is a reputational risk worth a second look." },
+    "agreement": { "hold_below": 30, "why": "Very low agreement suggests the reply goes along with a customer's mistaken premise, which the rules send to review." }
   },
 
   "when_accuracy_not_scored": "ignore",
-  "when_accuracy_not_scored_why": "TODO: 'not scored' means no claims were checked. Is that a problem for your persona?",
+  "when_accuracy_not_scored_why": "Most support emails make no public-knowledge claims and our own data checks still run, so a missing accuracy score is not a reason to hold (business rule 5).",
 
   "when_accuracy_unavailable": "HOLD_FOR_REVIEW",
-  "when_accuracy_unavailable_why": "TODO: the fact-check service was down. What should happen?"
+  "when_accuracy_unavailable_why": "When Ezio's fact-check is down we cannot verify public claims such as legal statements, so the draft waits for a human rather than going out unchecked."
 }

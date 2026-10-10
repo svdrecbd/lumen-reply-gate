@@ -94,17 +94,18 @@ def load_source_of_truth(persona):
     return data
 
 
-def check_source_of_truth(text, context, sot):
-    """TODO: the part where use Ezio's results and Compare the text against your persona's data to Decisions.
-
-    Return a list of Finding(level, message), where level is BLOCK or HOLD_FOR_REVIEW.
-    Return [] when nothing is wrong. Read your persona's business_rules.md first.
-
-    Example (customer support): pull "NN% loyalty discount" out of the text and compare it
-    with sot["policies"]["discounts"]["loyalty"]["percent"]:
-        return [Finding(BLOCK, "Loyalty discount is 15%, the email says 30%.")]
-    """
-    return []
+def check_source_of_truth(text, context, sot, signals=None):
+    """Independent signals: the persona's own data, plus Ezio's per-claim fact-check where it can see."""
+    findings = []
+    if "price_sheet" in sot and "policies" in sot:
+        from checks import check_customer_support
+        findings += [Finding(level, message) for level, message in check_customer_support(text, context, sot)]
+    if signals is not None:
+        contradicted = [c for c in signals.claims if str(c.get("verdict", c.get("status", ""))).lower() in ("contradicted", "refuted", "false")]
+        if contradicted or signals.claims_contradicted > 0:
+            detail = "; ".join(str(c.get("text") or c.get("claim") or "")[:120] for c in contradicted) or f"{signals.claims_contradicted} claim(s)"
+            findings.append(Finding(BLOCK, f"Ezio fact-check contradicts: {detail}"))
+    return findings
 
 
 def apply_policy(signals, findings, policy):
@@ -134,21 +135,41 @@ def apply_policy(signals, findings, policy):
     return reasons, decision
 
 
+def signal_evidence(signals):
+    return [f"Ezio tier {signals.tier} (score {signals.score}); accuracy {signals.accuracy_status}"
+            f" ({signals.claims_verified}/{signals.claims_total} claims verified, {signals.claims_contradicted} contradicted)",
+            f"Ezio dimensions: tone {signals.tone}, bias {signals.bias}, agreement {signals.agreement}"]
+
+
+CHECKS_RUN = ("Checked against price_sheet.csv and policies.json: prices, discounts and eligibility, stacking, "
+              "refund windows, response times, trials, unauthorized promises, promotional language")
+
+
 def decide(text, context=None, persona="customer_support", scenario=None, audit_log=True):
     context = context or {}
+    sot = load_source_of_truth(persona)
     try:
         response = analyze(text, scenario=scenario)
         signals = parse_signals(response)
     except EzioError as e:
-        result = Decision(POLICY["on_ezio_failure"], f"Ezio unavailable: {e}", [],
-                          {"error": str(e), "response": e.response})
+        # Ezio is down or malformed: our own data checks still run; fail closed otherwise.
+        findings = check_source_of_truth(text, context, sot)
+        blocking = [f for f in findings if f.level == BLOCK]
+        decision = BLOCK if blocking else POLICY["on_ezio_failure"]
+        reason = ("; ".join(f.message for f in blocking) + " (Ezio unavailable)") if blocking else \
+                 f"Ezio unavailable ({e}); held for a human because public claims could not be fact-checked"
+        evidence = [f.message for f in findings] + [f"Ezio error: {e}", CHECKS_RUN]
+        result = Decision(decision, reason, evidence, {"error": str(e), "response": e.response})
     else:
-        findings = check_source_of_truth(text, context, load_source_of_truth(persona))
+        findings = check_source_of_truth(text, context, sot, signals)
         reasons, decision = apply_policy(signals, findings, POLICY)
-        result = Decision(
-            decision, "; ".join(reasons), [f.message for f in findings],
-            response,
-        )
+        critical = [f for f in response.get("findings", []) if isinstance(f, dict) and f.get("severity") == "CRITICAL"]
+        if critical and decision == APPROVE:
+            # Ezio's own critical finding is a reason for a human look, even under a GREEN tier.
+            decision = HOLD
+            reasons = [f"Ezio raised a CRITICAL finding: {str(critical[0].get('message', '')).strip()[:160] or 'see Ezio findings'}"]
+        evidence = [f.message for f in findings] + signal_evidence(signals) + [CHECKS_RUN]
+        result = Decision(decision, "; ".join(reasons), evidence, response)
     if audit_log:
         audit.record(persona, text, context, result)
     return result

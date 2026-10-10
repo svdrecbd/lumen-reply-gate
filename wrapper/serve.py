@@ -5,6 +5,7 @@ from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import audit
 import mock_actions
 from wrapper import APPROVE, decide
 
@@ -54,6 +55,8 @@ class Handler(BaseHTTPRequestHandler):
             if persona not in PERSONAS:
                 return self.send_json(400, {"error": "Unknown persona"})
             return self.send_json(200, {"samples": samples(persona)})
+        if route == "/api/audit":
+            return self.send_json(200, audit.trail(limit=20))
         served = ui_file(route)
         if served:
             raw, content_type = served
@@ -66,6 +69,18 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(404, {"error": "Unknown endpoint"})
 
     def do_POST(self):
+        if self.path == "/review":
+            # Manager review of a HOLD: records the reviewer's call and reason. It never runs the action.
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                payload = json.loads(self.rfile.read(min(length, 100_000)))
+                verdict, reason = payload.get("verdict"), str(payload.get("reason", "")).strip()
+                if verdict not in ("proceed", "reject") or not reason:
+                    raise ValueError
+            except (ValueError, TypeError, OSError):
+                return self.send_json(400, {"error": "Review needs verdict (proceed or reject) and a reason"})
+            audit.record_review(str(payload.get("text", ""))[:20000], verdict, reason[:2000])
+            return self.send_json(200, {"recorded": True, "action_executed": False})
         if self.path != "/decide":
             return self.send_json(404, {"error": "Unknown endpoint"})
         self.connection.settimeout(10)

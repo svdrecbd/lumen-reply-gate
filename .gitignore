@@ -8,3 +8,7 @@ __pycache__/
 *.jsonl
 runs/
 results/*.practice.*
+
+# Final-set results are submitted on Devpost, not published before the deadline.
+results/
+results_first_final_run/

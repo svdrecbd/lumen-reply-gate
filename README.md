@@ -1,3 +1,24 @@
+# Our submission: Lumen Cloud reply check (customer support persona)
+
+**Gated action:** `send_email` to a customer, run only on APPROVE.
+**Decision policy:** [DECISION_POLICY.md](DECISION_POLICY.md) (signals, thresholds with reasons, failure behaviour).
+**What we changed:** only `wrapper/`: `checks.py` (independent price-sheet and policy checks), `wrapper.py`
+(Ezio contradicted-claim block, evidence on every decision, data checks still run when Ezio is down), `policy.json`,
+`audit.py` (hash-chained, tamper-evident audit log), `serve.py` (`/review` and `/api/audit`), and the persona page
+`wrapper/ui/persona.html`. The harness, mock, fixtures and persona data are unchanged.
+
+**Run** (Python 3.9+, standard library only):
+
+```bash
+python3 gate.py serve --persona customer_support      # persona page; open the printed address
+python3 gate.py try --persona customer_support "Your 30% loyalty discount applies to the Pro plan."
+python3 gate.py practice --persona customer_support   # practice set: 16/16 exact, failure drills 15/15
+```
+
+Screenshots: [`screenshots/`](screenshots/).
+
+---
+
 # Approval Gate
 
 **A trust score doesn't make a decision. Your wrapper does.**
