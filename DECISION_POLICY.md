@@ -24,9 +24,9 @@ closed, and leaves a tamper-evident record.
 | Any fact contradicts our price sheet or policies (price, discount %, stacked discounts, ineligible loyalty discount, refund window, response time, trial) | BLOCK | A wrong number in a customer email is a commitment the company cannot honour (business rule 1, 2). |
 | Ezio marks a claim contradicted | BLOCK | Ezio can see public facts our files cannot (rule 6). |
 | Promise of a feature, delivery date or exception | HOLD | Agents lack the authority; a manager decides (rule 3). |
-| Promise of a delivery date ("ready by Friday"), other than a follow-up message | HOLD | Agents cannot commit engineering dates (rule 3). |
+| Promise of a delivery date for product work, other than a follow-up message | HOLD | Agents cannot commit engineering dates (rule 3). |
 | Hype: 2+ exclamation marks, 2+ all-caps words, or guarantee wording | HOLD | Brand risk even when the numbers are right (rule 4). |
-| Flattery or siding with the customer against policy ("you're absolutely right that you deserve more than the policy allows") | HOLD | Rule 4: agreeing with a customer's incorrect claim goes to a manager. |
+| Flattery, or agreeing with the customer against policy | HOLD | Rule 4: agreeing with a customer's incorrect claim goes to a manager. |
 | Ezio raises a CRITICAL finding while the tier is GREEN | HOLD | A critical finding from the trust layer deserves a human look even when the blended score is high. |
 | Tone < 40, bias < 40, agreement < 30 | HOLD | Low tone or bias scores flag unprofessional or one-sided replies; very low agreement suggests going along with a customer's wrong premise. |
 | Ezio tier GREEN or YELLOW | APPROVE (if nothing above fired) | The tier is a blend that can look fine while a fact is wrong, so our checks decide facts; YELLOW alone is not evidence of a problem (rule 5). |
